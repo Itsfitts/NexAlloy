@@ -1,0 +1,74 @@
+name: Dispatch Release Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build release from'
+        required: true
+        default: 'main'
+        type: string
+      tag_name:
+        description: 'Tag / Release name (optional, defaults to release-<branch>-<commit>)'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.branch }}
+        submodules: true
+
+    - name: set up JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Write key
+      run: |
+        echo KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }} > signing.properties
+        echo KEYSTORE_ALIAS=${{ secrets.KEYSTORE_ALIAS }} >> signing.properties
+        echo KEYSTORE_ALIAS_PASSWORD='${{ secrets.KEYSTORE_ALIAS_PASSWORD }}' >> signing.properties
+        echo KEYSTORE_FILE=../key.jks >> signing.properties
+        echo ${{ secrets.KEYSTORE }} | base64 --decode > key.jks
+
+    - name: Build Release
+      run: ./gradlew assembleRelease
+
+    - name: Upload Release Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: nexalloy-release-apk
+        path: |
+          app/build/outputs/apk/release
+          app/build/outputs/mapping/release/mapping.txt
+
+    - name: Create Release
+      env:
+        INPUT_BRANCH: ${{ inputs.branch }}
+        INPUT_TAG_NAME: ${{ inputs.tag_name }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        GIT_SHORT=$(git rev-parse --short HEAD)
+        TAG_NAME="$INPUT_TAG_NAME"
+        if [ -z "$TAG_NAME" ]; then
+          CLEAN_BRANCH=$(echo "$INPUT_BRANCH" | sed 's/[^a-zA-Z0-9._-]/_/g')
+          TAG_NAME="release-${CLEAN_BRANCH}-${GIT_SHORT}"
+        fi
+        cd app/build/outputs/apk/release/
+        mv app-release.apk "NexAlloy-${TAG_NAME}.apk"
+        gh release create "$TAG_NAME" "NexAlloy-${TAG_NAME}.apk" \
+          --title "Release ($TAG_NAME)" \
+          --notes "Release build generated on dispatch from branch '$INPUT_BRANCH' (commit ${GIT_SHORT})."
