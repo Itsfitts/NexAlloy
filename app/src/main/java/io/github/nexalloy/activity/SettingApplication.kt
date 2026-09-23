@@ -9,6 +9,9 @@ import kotlin.concurrent.Volatile
 class SettingApplication : Application(), XposedServiceHelper.OnServiceListener {
 
     companion object {
+        lateinit var instance: SettingApplication
+            private set
+
         @Volatile
         var mService: XposedService? = null
             private set
@@ -47,6 +50,7 @@ class SettingApplication : Application(), XposedServiceHelper.OnServiceListener 
 
     override fun onCreate() {
         super.onCreate()
+        instance = this
         XposedServiceHelper.registerListener(this)
     }
 

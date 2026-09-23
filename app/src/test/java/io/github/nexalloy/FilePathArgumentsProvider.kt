@@ -1,5 +1,6 @@
 package io.github.nexalloy
 
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.ArgumentsProvider
@@ -7,7 +8,6 @@ import org.junit.jupiter.params.support.ParameterDeclarations
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.stream.Stream
-import kotlin.io.path.Path
 import kotlin.io.path.name
 
 class FilePathArgumentsProvider : ArgumentsProvider {
@@ -15,16 +15,23 @@ class FilePathArgumentsProvider : ArgumentsProvider {
         parameters: ParameterDeclarations,
         context: ExtensionContext
     ): Stream<out Arguments> {
-        println(Path(".").toAbsolutePath())
-        val projectDir = Paths.get(".") //.toAbsolutePath().normalize()
+        val projectDir = Paths.get(".")
         val testInputPath = projectDir.resolve("binaries")
 
         if (!Files.exists(testInputPath)) {
-            throw IllegalStateException("APKs folder not found: $testInputPath")
+            Assumptions.assumeTrue(false, "APKs folder not found: $testInputPath")
+            return Stream.empty()
         }
 
-        return Files.walk(testInputPath).filter { path ->
-                Files.isRegularFile(path) && path.normalize().none { it.name.startsWith(".") }
-            }.map { Arguments.of(it) }
+        val files = Files.walk(testInputPath).filter { path ->
+            Files.isRegularFile(path) && path.normalize().none { it.name.startsWith(".") }
+        }.toList()
+
+        if (files.isEmpty()) {
+            Assumptions.assumeTrue(false, "No APKs found in $testInputPath")
+            return Stream.empty()
+        }
+
+        return files.stream().map { Arguments.of(it) }
     }
 }
