@@ -15,4 +15,18 @@
     <string name="disable_auto_check_update_title">Disable auto update check</string>
     <string name="module_not_activated_summary">Activate this module in Module Management!</string>
     <string name="slogan_summary">ChsBuffer\'s LSPosed module, powered by Morphe, ReVanced, and beyond.\n\nThis is not an official Morphe or ReVanced project, do not ask their developers for help.</string>
+
+    <string name="custom_patch_list_title">Custom Patch List</string>
+    <string name="custom_patch_list_source_builtin">Using built-in default patch list</string>
+    <string name="custom_patch_list_source_custom">Using custom patch list: %1$s (%2$d patches)</string>
+    <string name="custom_patch_list_load_title">Load custom patch list</string>
+    <string name="custom_patch_list_load_summary">Select and import a custom patch list file from local storage</string>
+    <string name="custom_patch_list_reload_title">Reload custom patch list</string>
+    <string name="custom_patch_list_reload_summary">Re-read and parse the active custom patch list file</string>
+    <string name="custom_patch_list_clear_title">Restore default patch list</string>
+    <string name="custom_patch_list_clear_summary">Disable custom patch list and revert to built-in patches</string>
+    <string name="custom_patch_list_import_success">Loaded custom patch list: %1$s\n(%2$d patches across %3$d apps)</string>
+    <string name="custom_patch_list_import_error">Failed to load patch list: %1$s</string>
+    <string name="custom_patch_list_cleared">Restored built-in default patch list</string>
+    <string name="custom_patch_list_reading">Reading custom patch list...</string>
 </resources>

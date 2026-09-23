@@ -13,12 +13,12 @@ jobs:
       contents: write
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
     - name: set up JDK
-      uses: actions/setup-java@v5
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
@@ -28,12 +28,16 @@ jobs:
       run: chmod +x gradlew
 
     - name: Write key
+      env:
+        KEYSTORE_BASE64: ${{ secrets.KEYSTORE }}
       run: |
-        echo KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }} > signing.properties
-        echo KEYSTORE_ALIAS=${{ secrets.KEYSTORE_ALIAS }} >> signing.properties
-        echo KEYSTORE_ALIAS_PASSWORD='${{ secrets.KEYSTORE_ALIAS_PASSWORD }}' >> signing.properties
-        echo KEYSTORE_FILE=../key.jks >> signing.properties
-        echo ${{ secrets.KEYSTORE }} | base64 --decode > key.jks
+        if [ -n "$KEYSTORE_BASE64" ]; then
+          echo KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }} > signing.properties
+          echo KEYSTORE_ALIAS=${{ secrets.KEYSTORE_ALIAS }} >> signing.properties
+          echo KEYSTORE_ALIAS_PASSWORD='${{ secrets.KEYSTORE_ALIAS_PASSWORD }}' >> signing.properties
+          echo KEYSTORE_FILE=../key.jks >> signing.properties
+          echo "$KEYSTORE_BASE64" | base64 --decode > key.jks
+        fi
 
     - name: Build Release
       run: ./gradlew assembleRelease
